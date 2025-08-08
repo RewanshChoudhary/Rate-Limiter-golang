@@ -39,6 +39,8 @@ func (bucket *Tokenbucket)Allow(n float64) bool{
 
 
 	if (n>bucket.CurrentTokens){
+		bucket.CurrentTokens-=n;
+		
 		fmt.Println("The request was denied")
 		return false
 
