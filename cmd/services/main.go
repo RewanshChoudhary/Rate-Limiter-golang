@@ -1,6 +1,7 @@
-package algorithms
+package main
 
 import (
+	"github.com/RewanshChoudhary/Rate-Limiter-golang/algorithms"
 	"fmt"
 	"io"
 	"net/http"
@@ -8,7 +9,7 @@ import (
 	"time"
 )
 
-func RequestMiddlewareHandler(tb *Tokenbucket, h http.Handler) http.Handler {
+func RequestMiddlewareHandler(tb *algorithms.TokenBucket, h http.Handler) http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if tb.Allow(1) {
@@ -32,7 +33,7 @@ func main() {
 	var wg sync.WaitGroup
 	
 
-	bucket := Tokenbucket{
+	bucket := algorithms.TokenBucket{
 		Capacity:      100,
 		Fillrate:      5,
 		CurrentTokens: 100,

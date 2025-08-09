@@ -13,7 +13,7 @@ import (
 //requestConclusion
 //lastFilled
 //currentTokens
-type Tokenbucket struct{
+type TokenBucket struct{
 	Capacity float64
 	Fillrate float64
 	CurrentTokens float64
@@ -23,11 +23,12 @@ type Tokenbucket struct{
 }
 //token bucket algorithm 
 
-func (bucket *Tokenbucket)Allow(n float64) bool{
+func (bucket *TokenBucket)Allow(n float64) bool{
 	bucket.mu.Lock()
-
+    // Blocks the bucket for this operation from other workers
 	defer bucket.mu.Unlock()
-    
+    //Calculating number of tokens available currently
+	
 	elapsedTime:=time.Since(bucket.LastFilled).Seconds()
 	bucket.LastFilled=time.Now()
 
