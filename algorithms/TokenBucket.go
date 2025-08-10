@@ -1,6 +1,7 @@
 package algorithms
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"sync"
@@ -23,32 +24,39 @@ type TokenBucket struct{
 }
 //token bucket algorithm 
 
-func (bucket *TokenBucket)Allow(n float64) bool{
+func (bucket *TokenBucket)Allow(n float64) (bool,error){
 	bucket.mu.Lock()
     // Blocks the bucket for this operation from other workers
 	defer bucket.mu.Unlock()
+	
     //Calculating number of tokens available currently
 	
 	elapsedTime:=time.Since(bucket.LastFilled).Seconds()
-	bucket.LastFilled=time.Now()
+	if (elapsedTime>0){
+		
+		newTokens:=bucket.CurrentTokens+elapsedTime*bucket.Fillrate;
+	
+		bucket.CurrentTokens=math.Min(newTokens,bucket.Capacity)
+		bucket.LastFilled=time.Now()
+
+	}
+	
 
 
-	newTokens:=bucket.CurrentTokens+elapsedTime*bucket.Fillrate;
-
-	bucket.CurrentTokens=math.Min(newTokens,bucket.Capacity)
 
 
-
-	if (n>bucket.CurrentTokens){
+	if (n<=bucket.CurrentTokens){
 		bucket.CurrentTokens-=n;
 		
-		fmt.Println("The request was denied")
-		return false
+		fmt.Println("The request was made")
+		return true,nil
 
 
 	}
-	fmt.Println("Accepted")
-	return true
+
+	fmt.Println("Denied")
+	return false,errors.New("Too many requests")
+
 
 
 
