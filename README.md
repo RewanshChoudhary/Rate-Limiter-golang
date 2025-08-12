@@ -1,6 +1,6 @@
 (Under development)
 
-#  High-Performance Distributed API Rate Limiter
+#  High-Performance Distributed API Rate Limiter (With redis )
 
 A production-grade, extensible rate limiting service written in Go, featuring multiple algorithms, distributed state management via Redis, dynamic configuration, and real-time observability via Prometheus and Grafana.
 
