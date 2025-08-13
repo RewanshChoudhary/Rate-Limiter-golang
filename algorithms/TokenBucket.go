@@ -1,72 +1,45 @@
 package algorithms
 
 import (
-	"errors"
+	"context"
+
 	"fmt"
-	"math"
-	"sync"
+
 	"time"
+
+	"github.com/redis/go-redis/v9"
 )
 
-//capacity
-//rate
-//mutex
-//requestConclusion
-//lastFilled
-//currentTokens
-type TokenBucket struct{
-	Capacity float64
-	Fillrate float64
-	CurrentTokens float64
-    LastFilled time.Time
-	mu sync.Mutex
 
+type TokenBucket struct {
+    Capacity      int64
+    Fillrate      int64
+    CurrentTokens int64
+    LastFilled    int64 // Unix timestamp
 }
-//token bucket algorithm 
-
-func (bucket *TokenBucket)Allow(n float64) (bool,error){
-	bucket.mu.Lock()
-    // Blocks the bucket for this operation from other workers
-	defer bucket.mu.Unlock()
-	
-    //Calculating number of tokens available currently
-	
-	elapsedTime:=time.Since(bucket.LastFilled).Seconds()
-	if (elapsedTime>0){
-		
-		newTokens:=bucket.CurrentTokens+elapsedTime*bucket.Fillrate;
-	
-		bucket.CurrentTokens=math.Min(newTokens,bucket.Capacity)
-		bucket.LastFilled=time.Now()
-
-	}
-	
 
 
 
 
-	if (n<=bucket.CurrentTokens){
-		bucket.CurrentTokens-=n;
-		
-		fmt.Println("The request was made")
-		return true,nil
+func TokenBucketSetUp(client *redis.Client){
+	ctx:=context.Background()
+	userKey:="User12345"
 
+
+
+	err:=client.HSet(ctx ,userKey,map[string]interface{}{
+		"capacity":       100,
+		"fillrate":       10,
+		"current_tokens": 80,
+		"last_filled":    time.Now().Unix(),
+
+	}).Err()
+
+	if (err!=nil){
+		fmt.Errorf("The error while creating hashset %w",err)
 
 	}
-
-	fmt.Println("Denied")
-	return false,errors.New("Too many requests")
-
-
-
-
-
-
-
 	
-
-
-
 
 
 

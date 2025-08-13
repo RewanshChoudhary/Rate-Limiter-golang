@@ -21,18 +21,8 @@ func main() {
 		panic(err)
 	}
 	fmt.Println(pong)
+	
 
-	err=rd.Set(ctx,"Name","Blah",0).Err()
-
-    if (err!=nil){
-		panic(err);
-
-	}
-	val,er:=rd.Get(ctx,"Name").Result()
-	if (er!=nil){
-		panic(er)
-	}
-	fmt.Print(val)
 	
 
 }
