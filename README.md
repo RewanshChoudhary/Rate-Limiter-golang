@@ -9,7 +9,7 @@ A production-grade, extensible rate limiting service written in Go, featuring mu
 ---
 
 ##  Features
-
+`
 -  **Multiple Algorithms**:
   -  Fixed Window Counter
   -  Sliding Window Log
