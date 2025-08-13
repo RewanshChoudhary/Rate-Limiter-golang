@@ -3,6 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
+
+
 
 	"github.com/redis/go-redis/v9"
 )
@@ -21,7 +24,17 @@ func main() {
 		panic(err)
 	}
 	fmt.Println(pong)
+
+
+	scriptBytes, err := os.ReadFile("TokenBucketScript.lua")
+
+	script:=string(scriptBytes)
+
 	
+
+
+
+
 
 	
 

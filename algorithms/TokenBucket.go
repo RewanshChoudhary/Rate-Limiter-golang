@@ -21,7 +21,7 @@ type TokenBucket struct {
 
 
 
-func TokenBucketSetUp(client *redis.Client){
+func TokenBucketSetUp(client *redis.Client,luaScript string )(string,error){
 	ctx:=context.Background()
 	userKey:="User12345"
 
@@ -39,6 +39,8 @@ func TokenBucketSetUp(client *redis.Client){
 		fmt.Errorf("The error while creating hashset %w",err)
 
 	}
+
+
 	
 
 
