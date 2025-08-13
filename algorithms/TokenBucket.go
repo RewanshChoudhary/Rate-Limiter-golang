@@ -19,18 +19,27 @@ type TokenBucket struct {
 }
 
 
-
-
-func TokenBucketSetUp(client *redis.Client,luaScript string )(string,error){
+func TokenBucketExecute(client *redis.Client,luaScript ,userKey string,capacity int64,fillRate int64,currentTokens int64 )(bool,error ){
 	ctx:=context.Background()
-	userKey:="User12345"
 
+	ok,err:=client.Eval(ctx,luaScript,[]string {userKey},interface{}{
+
+
+	})
+
+}
+
+func TokenBucketSetUp(client *redis.Client,luaScript string,capacity int64,fillRate int64,currentTokens int64,userKey string)(bool,error){
+	
+	
+
+ctx:=context.Background()
 
 
 	err:=client.HSet(ctx ,userKey,map[string]interface{}{
-		"capacity":       100,
-		"fillrate":       10,
-		"current_tokens": 80,
+		"capacity":       capacity,
+		"fillrate":       fillRate,
+		"current_tokens": currentTokens,
 		"last_filled":    time.Now().Unix(),
 
 	}).Err()
@@ -39,6 +48,10 @@ func TokenBucketSetUp(client *redis.Client,luaScript string )(string,error){
 		fmt.Errorf("The error while creating hashset %w",err)
 
 	}
+    return TokenBucketExecute(client,luaScript,userKey,capacity,fillRate,currentTokens);
+
+
+
 
 
 	
