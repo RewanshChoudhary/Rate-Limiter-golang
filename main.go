@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"time"
+	
 
 	"github.com/RewanshChoudhary/Rate-Limiter-golang/algorithms"
 	"github.com/redis/go-redis/v9"
@@ -36,7 +36,7 @@ func main() {
 	script:=string(scriptBytes)
 
 	val,err:=algorithms.TokenBucketSetUp(rd,script,capacity,refillRate,currentTokens,userKey)
-
+	
 
 	
 
