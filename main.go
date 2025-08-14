@@ -39,11 +39,14 @@ func main() {
 	
 
 	
+    if val{
+		fmt.Print("Request was accepted ")
 
 
+	}else {
+		fmt.Println("The request is not sent")
 
-
-
+	}
 	
 
 }

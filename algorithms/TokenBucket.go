@@ -51,6 +51,8 @@ func TokenBucketExecute(client *redis.Client, luaScript, userKey string, capacit
 
 	if val.(int64) == 1 {
 		return true, nil
-	}
+	}else {
+		return false, nil
 
+	}
 }
