@@ -17,6 +17,45 @@ var currentTokens int64
 
 var ctx = context.Background()
 
+func startService(rd *redis.Client) http.HandlerFunc{
+
+	return func(w http.ResponseWriter ,r * http.Request ){
+
+		scriptBytes, err := os.ReadFile("TokenBucketScript.lua")
+		if (err!=nil){
+			panic(err)
+
+
+		}
+
+	script:=string(scriptBytes)
+
+	capacity=100
+	refillRate=1
+	currentTokens=100
+	userKey="Rewansh"
+
+
+	val,err:=algorithms.TokenBucketSetUp(rd,script,capacity,refillRate,currentTokens,userKey)
+	
+
+	
+    if val{
+		fmt.Println("Request was accepted ")
+
+
+
+
+	}else {
+		fmt.Println("The request is not sent")
+
+	}
+
+
+
+	}
+	 
+}
 func main() {
 	rd := redis.NewClient(&redis.Options{
 		Addr:     "localhost:6379",
@@ -30,27 +69,21 @@ func main() {
 	}
 	fmt.Println(pong)
 
+	
+
 	mux:=http.NewServeMux()
 
-	mux.HandleFunc("/hello",)
+	mux.HandleFunc("/hello",startService(rd))
+	fmt.Println("Server made")
 
-
-	scriptBytes, err := os.ReadFile("TokenBucketScript.lua")
-
-	script:=string(scriptBytes)
-
-	val,err:=algorithms.TokenBucketSetUp(rd,script,capacity,refillRate,currentTokens,userKey)
-	
+	http.ListenAndServe(":9090",mux)
 
 	
-    if val{
-		fmt.Print("Request was accepted ")
 
 
-	}else {
-		fmt.Println("The request is not sent")
 
-	}
+
+	
 	
 
 }
