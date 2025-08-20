@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
-	
 
 	"github.com/RewanshChoudhary/Rate-Limiter-golang/algorithms"
 	"github.com/redis/go-redis/v9"
@@ -29,6 +29,10 @@ func main() {
 		panic(err)
 	}
 	fmt.Println(pong)
+
+	mux:=http.NewServeMux()
+
+	mux.HandleFunc("/hello",)
 
 
 	scriptBytes, err := os.ReadFile("TokenBucketScript.lua")
