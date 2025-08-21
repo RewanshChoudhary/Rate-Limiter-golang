@@ -1,8 +1,8 @@
-
 package cmd
 
 import (
 	"context"
+	"net/http"
 	"os"
 
 	"fmt"
@@ -14,7 +14,9 @@ import (
 )
 var userKey string 
 var capacity int64
-var fillRate int64
+var refillRate int64
+var endpoint string 
+var serverport ="8080"
 
 type TokenBucket struct {
 	Capacity      int64
@@ -29,7 +31,6 @@ func TokenBucketSetUp(client *redis.Client, luaScript string, capacity int64, fi
     exists,err:=client.Exists(ctx,userKey).Result()
 	if err!=nil{
 		fmt.Println("Problem while checking existence")
-
 
 	}
 	if (exists==0){
@@ -59,7 +60,7 @@ func TokenBucketExecute(client *redis.Client, luaScript, userKey string, capacit
 		capacity,
 		fillRate,
 		time.Now().Unix(),
-		50,
+		1,
 	}).Result()
 	if err != nil {
 		panic(err)
@@ -73,19 +74,7 @@ func TokenBucketExecute(client *redis.Client, luaScript, userKey string, capacit
 
 	}
 }
-func returnStatusCode(acc bool ){
 
-	// Will change for future additions
-
-if (acc){
-	fmt.Println("Request sent")
-
-}else {
-	fmt.Println("Denied")
-
-
-}
-}
 // tokenBucketCmd represents the tokenBucket command
 var tokenBucketCmd = &cobra.Command{
 	Use:   "tokenBucket",
@@ -113,18 +102,57 @@ var tokenBucketCmd = &cobra.Command{
 			fmt.Errorf("The following error occurred while reading the script %w",err)
 
 		}
-		refillRate,err:=cmd.Flags().GetInt64("fillRate")
+		refillRate,err:=cmd.Flags().GetInt64("refillRate")
 		if (err!=nil){
 			fmt.Errorf("The following error occurred while reading the script %w",err)
 
 		}
-		accepted,err:=TokenBucketSetUp(rd,string(luaScript),capacity,refillRate,userKey)
+		
 		if (err!=nil){
 			fmt.Errorf("The following error occurred while getting the output fromr the function %w",err)
 
 		}
+		ep,err:=cmd.Flags().GetString("endpoint")
 
-		returnStatusCode(accepted)
+
+		mux:=http.NewServeMux()
+		
+		port,err:=cmd.Flags().GetString("serverport")
+
+		if (err!=nil){
+			fmt.Errorf("Flag was not read hence the error %w",err)
+
+		}
+
+	
+		
+		
+	
+		
+
+	
+		mux.HandleFunc(ep,http.HandlerFunc(func (w http.ResponseWriter,r * http.Request){
+			acc,err:=TokenBucketSetUp(rd,string(luaScript),capacity,refillRate,userKey)
+			if err!=nil{
+				fmt.Errorf("The error throw %w",err)
+
+			
+			}
+
+			
+			if acc {
+				w.WriteHeader(http.StatusOK)
+				w.Write([]byte("Request allowed\n"))
+			} else {
+				w.WriteHeader(http.StatusTooManyRequests)
+				w.Write([]byte("Rate limit exceeded\n"))
+			}
+			
+		}))
+		fmt.Printf("Server running on port %s, endpoint: %s\n", port, ep)
+
+		http.ListenAndServe(":"+port,mux)
+		fmt.Printf("Server running on port %s, endpoint: %s\n", port, ep)
 
 		
 	},
@@ -135,7 +163,7 @@ func init() {
 
 	tokenBucketCmd.Flags().String("userkey",userKey,"Sets the key set for the user for personalised storage")
 	tokenBucketCmd.Flags().Int64("capacity",capacity,"Sets Capacity of bucket containing tokens to a given amount")
-	tokenBucketCmd.Flags().Int64("refillrate",fillRate,"Sets the fillrate for your bucket configuration ")
-
-
+	tokenBucketCmd.Flags().Int64("refillrate",refillRate,"Sets the fillrate for your bucket configuration ")
+    tokenBucketCmd.Flags().String("endpoint",endpoint,"The endpoint you want to secure with this service ")
+    tokenBucketCmd.Flags().String("serverport",serverport,"Server port for testing how this works ")
 }

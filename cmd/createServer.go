@@ -6,12 +6,12 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"net/http"
+	
 
 	"github.com/redis/go-redis/v9"
 	"github.com/spf13/cobra"
 )
-var serverport string 
+
 
 // createServerCmd represents the createServer command
 var createServerCmd = &cobra.Command{
@@ -35,21 +35,7 @@ and usage of using your command. For example:`,
 	
 		
 	
-		mux:=http.NewServeMux()
-		port,err:=cmd.Flags().GetString("serverport")
-
-		if (err!=nil){
-			fmt.Errorf("Flag was not read hence the error %w",err)
-
-		}
-
-	
 		
-		
-	
-		http.ListenAndServe(":"+port,mux)
-
-	
 		
 	},
 }
@@ -57,7 +43,7 @@ and usage of using your command. For example:`,
 func init() {
 	rootCmd.AddCommand(createServerCmd)
 
-	createServerCmd.Flags().String("serverport",serverport,"For a customised server port to access")
+	createServerCmd.Flags().String("serverport","9090","For a customised server port to access")
 
 	
 
