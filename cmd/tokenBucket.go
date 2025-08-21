@@ -3,6 +3,8 @@ package cmd
 import (
 	"context"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 	"os"
 
 	"fmt"
@@ -17,7 +19,7 @@ var capacity int64
 var refillRate int64
 var endpoint string 
 var serverport ="8080"
-
+var testServer bool
 type TokenBucket struct {
 	Capacity      int64
 	Fillrate      int64
@@ -113,9 +115,12 @@ var tokenBucketCmd = &cobra.Command{
 
 		}
 		ep,err:=cmd.Flags().GetString("endpoint")
-
-
+		create,err:=cmd.Flags().GetBool("testserver")
+		
 		mux:=http.NewServeMux()
+		if create{
+
+
 		
 		port,err:=cmd.Flags().GetString("serverport")
 
@@ -123,14 +128,6 @@ var tokenBucketCmd = &cobra.Command{
 			fmt.Errorf("Flag was not read hence the error %w",err)
 
 		}
-
-	
-		
-		
-	
-		
-
-	
 		mux.HandleFunc(ep,http.HandlerFunc(func (w http.ResponseWriter,r * http.Request){
 			acc,err:=TokenBucketSetUp(rd,string(luaScript),capacity,refillRate,userKey)
 			if err!=nil{
@@ -153,7 +150,31 @@ var tokenBucketCmd = &cobra.Command{
 
 		http.ListenAndServe(":"+port,mux)
 		fmt.Printf("Server running on port %s, endpoint: %s\n", port, ep)
+	}else {
+		resp,err:=http.Get(ep)
+		if(err!=nil){
+			fmt.Errorf("The error we received %w",err)
 
+		}
+		if (resp.StatusCode!=http.StatusOK){
+			fmt.Println("Not a valid endpoint ")
+			return
+		}
+		
+proxy := httputil.NewSingleHostReverseProxy(&url.URL{Scheme: "https", Host: "external-service.com"})
+
+mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+    allowed, _ := TokenBucketSetUp(rd, string(luaScript), capacity, refillRate, userKey)
+    if !allowed {
+        w.WriteHeader(http.StatusTooManyRequests)
+        w.Write([]byte("Rate limit exceeded"))
+        return
+    }
+    proxy.ServeHTTP(w, r) // Forward request if allowed
+})
+
+
+	}
 		
 	},
 }
@@ -166,4 +187,4 @@ func init() {
 	tokenBucketCmd.Flags().Int64("refillrate",refillRate,"Sets the fillrate for your bucket configuration ")
     tokenBucketCmd.Flags().String("endpoint",endpoint,"The endpoint you want to secure with this service ")
     tokenBucketCmd.Flags().String("serverport",serverport,"Server port for testing how this works ")
-}
+tokenBucketCmd.Flags().Bool("testserver",testServer,"Provides a test server in uyour local machine to check how does the working goes")}
