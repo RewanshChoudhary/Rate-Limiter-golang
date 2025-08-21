@@ -1,18 +1,14 @@
-/*
-Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 
-*/
 package cmd
-
-
-
 
 import (
 	"context"
+	"os"
 
 	"fmt"
-	"github.com/spf13/cobra"
 	"time"
+
+	"github.com/spf13/cobra"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -27,7 +23,7 @@ type TokenBucket struct {
 	LastFilled    int64 // Unix timestamp
 }
 
-func TokenBucketSetUp(client *redis.Client, luaScript string, capacity int64, fillRate int64, currentTokens int64, userKey string) (bool, error) {
+func TokenBucketSetUp(client *redis.Client, luaScript string, capacity int64, fillRate int64, userKey string) (bool, error) {
 
 	ctx := context.Background()
     exists,err:=client.Exists(ctx,userKey).Result()
@@ -40,7 +36,7 @@ func TokenBucketSetUp(client *redis.Client, luaScript string, capacity int64, fi
 		err := client.HSet(ctx, userKey, map[string]interface{}{
 			"capacity":       capacity,
 			"fillrate":       fillRate,
-			"current_tokens": currentTokens,
+			"current_tokens": capacity,
 			"last_filled":    time.Now().Unix(),
 		}).Err()
 		if err != nil {
@@ -77,14 +73,59 @@ func TokenBucketExecute(client *redis.Client, luaScript, userKey string, capacit
 
 	}
 }
+func returnStatusCode(acc bool ){
+
+	// Will change for future additions
+
+if (acc){
+	fmt.Println("Request sent")
+
+}else {
+	fmt.Println("Denied")
 
 
+}
+}
 // tokenBucketCmd represents the tokenBucket command
 var tokenBucketCmd = &cobra.Command{
 	Use:   "tokenBucket",
 	Short: "Uses token bucket algorithm of rate limiting",
 	Long: `Uses token bucket algorithm of rate limiting  Helps with dynamic values according to the needs`,
 	Run: func(cmd *cobra.Command, args []string) {
+		
+		rd := redis.NewClient(&redis.Options{
+			Addr:     "localhost:6379",
+			Password: "",
+			DB:       0,
+		})
+		luaScript,err:=os.ReadFile("TokenBucketScript.lua")
+		if (err!=nil){
+			fmt.Errorf("The following error occurred while reading the script %w",err)
+
+		}
+		userKey,err:=cmd.Flags().GetString("userkey")
+		if (err!=nil){
+			fmt.Errorf("The following error occurred while reading the script %w",err)
+
+		}
+		capacity,err:=cmd.Flags().GetInt64("capacity")
+		if (err!=nil){
+			fmt.Errorf("The following error occurred while reading the script %w",err)
+
+		}
+		refillRate,err:=cmd.Flags().GetInt64("fillRate")
+		if (err!=nil){
+			fmt.Errorf("The following error occurred while reading the script %w",err)
+
+		}
+		accepted,err:=TokenBucketSetUp(rd,string(luaScript),capacity,refillRate,userKey)
+		if (err!=nil){
+			fmt.Errorf("The following error occurred while getting the output fromr the function %w",err)
+
+		}
+
+		returnStatusCode(accepted)
+
 		
 	},
 }
@@ -94,15 +135,7 @@ func init() {
 
 	tokenBucketCmd.Flags().String("userkey",userKey,"Sets the key set for the user for personalised storage")
 	tokenBucketCmd.Flags().Int64("capacity",capacity,"Sets Capacity of bucket containing tokens to a given amount")
-	tokenBucketCmd.Flags().Int64("")
+	tokenBucketCmd.Flags().Int64("refillrate",fillRate,"Sets the fillrate for your bucket configuration ")
 
-	// Here you will define your flags and configuration settings.
 
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// tokenBucketCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// tokenBucketCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
