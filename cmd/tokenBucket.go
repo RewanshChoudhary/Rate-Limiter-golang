@@ -160,18 +160,6 @@ var tokenBucketCmd = &cobra.Command{
 			fmt.Println("Not a valid endpoint ")
 			return
 		}
-		
-proxy := httputil.NewSingleHostReverseProxy(&url.URL{Scheme: "https", Host: "external-service.com"})
-
-mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-    allowed, _ := TokenBucketSetUp(rd, string(luaScript), capacity, refillRate, userKey)
-    if !allowed {
-        w.WriteHeader(http.StatusTooManyRequests)
-        w.Write([]byte("Rate limit exceeded"))
-        return
-    }
-    proxy.ServeHTTP(w, r) // Forward request if allowed
-})
 
 
 	}
